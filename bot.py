@@ -11,9 +11,9 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN_HERE")
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="Markdown")
 
 # 👥 --- यहाँ अपने दोनों ग्रुप्स की डिटेल्स डालें ---
-MAIN_GROUP_ID = -1001234567890         # वह ग्रुप जहाँ लोग /like कमांड चलाएंगे (Main Group)
-FORCE_GROUP_ID = -1009876543210        # वह ग्रुप जिसे लोगों को ज्वाइन करना ज़रूरी है (Force Group)
-FORCE_GROUP_INVITE_LINK = "https://t.me" # फ़ोर्स ग्रुप की इनवाइट लिंक
+MAIN_GROUP_ID = --1004321005116       # वह ग्रुप जहाँ लोग /like कमांड चलाएंगे (Main Group)
+FORCE_GROUP_ID = -1004460844833       # वह ग्रुप जिसे लोगों को ज्वाइन करना ज़रूरी है (Force Group)
+FORCE_GROUP_INVITE_LINK = "https://t.me/english_chatting_USA18" # फ़ोर्स ग्रुप की इनवाइट लिंक
 
 user_limits = {}
 
