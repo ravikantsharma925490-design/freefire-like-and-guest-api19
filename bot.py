@@ -127,16 +127,16 @@ def like_cmd(message):
 
         update_user_count(str(user_id), added_likes)
 
-        response_format = (
-            "𖣘 *𝑳𝒊𝒌𝒆𝒔 𝑫𝒆𝒑𝒍𝒐𝒚𝒆𝒅* 𖣘\n"
-            "╭╌╌╌╌╌╌╌╌╌╌╌╮\n"
-            f"⌬ 𝑼𝑰𝑫 : `{target_uid}`\n"
-            f"⌬ 𝑵𝒂𝒎𝒆 : {player_name}\n"
-            "╰╌╌╌╌╌╌╌╌╌╌╌╯\n"
-            f"𖤍 𝑫𝒂𝒚 𝑺𝒕𝒂𝒓𝒕 : {day_start_likes}\n"
-            f"𖤍 𝑩𝒆𝒇𝒐𝒓𝒆 : {before_likes}\n"
-            f"𖤍 𝑨𝒅𝒅𝒆𝒅 : +{added_likes}\n"
-            f"𖤍 𝑻𝒐𝒕𝒂𝒍 : {total_likes}"
+               response_format = (
+            "🔥 *[ LIKES DEPLOYED ]* 🔥\n"
+            "┌───────────────────┐\n"
+            f"  🆔 *UID :* `{target_uid}`\n"
+            f"  👤 *Name :* {player_name}\n"
+            "└───────────────────┘\n"
+            f"📈 *Day Start :* {day_start_likes}\n"
+            f"📊 *Before :* {before_likes}\n"
+            f"⚡ *Added :* +{added_likes}\n"
+            f"🏆 *Total :* {total_likes}"
         )
         
         bot.reply_to(message, response_format)
