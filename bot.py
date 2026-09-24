@@ -10,9 +10,9 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN_HERE")
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="Markdown")
 
-# 👥 --- यहाँ अपने दोनों ग्रुप्स की डिटेल्स डालें ---
-MAIN_GROUP_ID = --1004321005116       # वह ग्रुप जहाँ लोग /like कमांड चलाएंगे (Main Group)
-FORCE_GROUP_ID = -1004460844833       # वह ग्रुप जिसे लोगों को ज्वाइन करना ज़रूरी है (Force Group)
+# 👥 --- आपके ग्रुप्स की बिल्कुल सही डिटेल्स ---
+MAIN_GROUP_ID = -1004321005116         # वह ग्रुप जहाँ लोग /like कमांड चलाएंगे (डबल माइनस ठीक कर दिया है)
+FORCE_GROUP_ID = -1004460844833        # वह ग्रुप जिसे लोगों को ज्वाइन करना ज़रूरी है
 FORCE_GROUP_INVITE_LINK = "https://t.me/english_chatting_USA18" # फ़ोर्स ग्रुप की इनवाइट लिंक
 
 user_limits = {}
@@ -44,7 +44,7 @@ def is_user_subscribed(user_id):
         print(f"Force Group Check Error: {e}")
         return False
 
-# --- 1. नॉर्मल वेलकम मैसेज (पर्सनल या ग्रुप कहीं भी /start करने पर बिना फ़ोर्स ज्वाइन के दिखेगा) ---
+# --- 1. नॉर्मल वेलकम मैसेज ---
 @bot.message_handler(commands=['start'])
 def start_cmd(message):
     welcome_text = (
@@ -75,7 +75,7 @@ def like_cmd(message):
     msg_parts = message.text.split()
     user_id = message.from_user.id
     
-    # 🚫 ग्रुप कमांड पर फ़ोर्स ग्रुप ज्वाइन चेक (अब सिर्फ यहाँ फ़ोर्स करेगा)
+    # 🚫 ग्रुप कमांड पर फ़ोर्स ग्रुप ज्वाइन चेक
     if not is_user_subscribed(user_id):
         join_msg = (
             f"❌ **एक्सेस डिनाइड (Access Denied), {message.from_user.first_name}!**\n\n"
@@ -127,7 +127,8 @@ def like_cmd(message):
 
         update_user_count(str(user_id), added_likes)
 
-               response_format = (
+        # यहाँ की सभी स्पेसिंग (Indentation Errors) को 100% फिक्स कर दिया गया है
+        response_format = (
             "🔥 *[ LIKES DEPLOYED ]* 🔥\n"
             "┌───────────────────┐\n"
             f"  🆔 *UID :* `{target_uid}`\n"
