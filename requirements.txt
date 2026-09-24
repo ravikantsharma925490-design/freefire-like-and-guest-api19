@@ -1,3 +1,6 @@
 httpx
 protobuf
 pycryptodome
+flask
+pyTelegramBotAPI
+gunicorn
