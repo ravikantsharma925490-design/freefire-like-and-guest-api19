@@ -10,10 +10,10 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN_HERE")
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="Markdown")
 
-# 📢 --- यहाँ अपने चैनल और ग्रुप की डिटेल्स डालें ---
-CHANNEL_USERNAME = "@YourChannelUsername"  # अपने चैनल का यूजरनेम (@ के साथ)
-GROUP_CHAT_ID = -1001234567890             # अपने उस ग्रुप की चैट आईडी (जिसमें बॉट चलाना है)
-GROUP_INVITE_LINK = "https://t.me" # ग्रुप की इनवाइट लिंक
+# 👥 --- यहाँ अपने दोनों ग्रुप्स की डिटेल्स डालें ---
+MAIN_GROUP_ID = -1001234567890         # वह ग्रुप जहाँ लोग /like कमांड चलाएंगे (Main Group)
+FORCE_GROUP_ID = -1009876543210        # वह ग्रुप जिसे लोगों को ज्वाइन करना ज़रूरी है (Force Group)
+FORCE_GROUP_INVITE_LINK = "https://t.me" # फ़ोर्स ग्रुप की इनवाइट लिंक
 
 user_limits = {}
 
@@ -34,67 +34,54 @@ def update_user_count(user_id, added_amount):
         user_limits[user_id]["count"] += added_amount
 
 def is_user_subscribed(user_id):
-    """चेक करेगा कि यूजर चैनल और ग्रुप दोनों में है या नहीं"""
+    """चेक करेगा कि यूजर फ़ोर्स ग्रुप का मेंबर है या नहीं"""
     try:
-        # 1. चैनल सब्सक्रिप्शन चेक करें
-        channel_status = bot.get_chat_member(CHANNEL_USERNAME, user_id).status
-        if channel_status in ['left', 'kicked']:
+        force_group_status = bot.get_chat_member(FORCE_GROUP_ID, user_id).status
+        if force_group_status in ['left', 'kicked']:
             return False
-            
-        # 2. ग्रुप सब्सक्रिप्शन चेक करें
-        group_status = bot.get_chat_member(GROUP_CHAT_ID, user_id).status
-        if group_status in ['left', 'kicked']:
-            return False
-            
         return True
     except Exception as e:
-        print(f"Sub Check Error: {e}")
-        # अगर कोई एरर आता है (जैसे बॉट एडमिन नहीं है), तो सुरक्षा के लिए False रिटर्न करें
+        print(f"Force Group Check Error: {e}")
         return False
 
-# --- पर्सनल चैट ब्लॉक करना और सिर्फ ग्रुप में काम करना ---
-@bot.message_handler(func=lambda message: message.chat.type == 'private')
-def block_private_chat(message):
-    bot.reply_to(
-        message, 
-        f"❌ **यह बॉट पर्सनल चैट में काम नहीं करता है!**\n\n"
-        f"इसका उपयोग करने के लिए कृपया हमारे ऑफिशियल ग्रुप में आएं:\n"
-        f"👉 [यहाँ क्लिक करके ग्रुप ज्वाइन करें]({GROUP_INVITE_LINK})",
-        disable_web_page_preview=True
-    )
-
-# --- ग्रुप में /start कमांड ---
+# --- 1. नॉर्मल वेलकम मैसेज (पर्सनल या ग्रुप कहीं भी /start करने पर बिना फ़ोर्स ज्वाइन के दिखेगा) ---
 @bot.message_handler(commands=['start'])
 def start_cmd(message):
-    if message.chat.id != GROUP_CHAT_ID:
-        return # अगर यह आपका तय किया हुआ ग्रुप नहीं है तो इग्नोर करें
-        
     welcome_text = (
-        "👋 **𖣘 Free Fire Like Bot 𖣘**\n\n"
-        "यह बॉट इस ग्रुप में एक्टिव है। आप एक कमांड में सीधे **+20 लाइक्स** ले सकते हैं!\n"
-        "⚠️ **नियम:** लाइक लेने के लिए आपका हमारे चैनल और ग्रुप दोनों में जुड़े रहना ज़रूरी है।\n\n"
-        "💡 **कमांड:** `/like <UID>`"
+        "👋 **𖣘 Free Fire Like Bot में आपका स्वागत है! 𖣘**\n\n"
+        "आप एक कमांड में सीधे **+20 लाइक्स** ले सकते हैं!\n"
+        "⚠️ **डेली लिमिट:** प्रति खिलाड़ी रोज़ केवल 20 लाइक्स ही मिलेंगे।\n\n"
+        "💡 **लाइक्स पाने के लिए हमारे मेन ग्रुप में यह कमांड टाइप करें:**\n"
+        "`/like <आपकी_UID>`"
     )
     bot.reply_to(message, welcome_text)
 
-# --- ग्रुप में /like कमांड + फ़ोर्स ज्वाइन सिस्टम ---
+# --- 2. सिर्फ ग्रुप में काम करने वाली /like कमांड + फ़ोर्स ज्वाइन सिस्टम ---
 @bot.message_handler(commands=['like'])
 def like_cmd(message):
-    # सुरक्षा: यह कमांड सिर्फ आपके तय किए गए ग्रुप में ही काम करेगी
-    if message.chat.id != GROUP_CHAT_ID:
+    # सुरक्षा: अगर कोई पर्सनल चैट में /like करेगा तो बॉट उसे मेन ग्रुप में भेजेगा
+    if message.chat.type == 'private':
+        bot.reply_to(
+            message, 
+            "❌ **यह कमांड पर्सनल चैट में काम नहीं करती!**\n\n"
+            "कृपया लाइक्स बढ़ाने के लिए हमारे मेन ग्रुप का उपयोग करें।"
+        )
+        return
+
+    # सुरक्षा: यह कमांड सिर्फ आपके तय किए गए MAIN_GROUP_ID में ही काम करेगी
+    if message.chat.id != MAIN_GROUP_ID:
         return
 
     msg_parts = message.text.split()
     user_id = message.from_user.id
     
-    # 🚫 1. फ़ोर्स ज्वाइन चेक (चैनल और ग्रुप दोनों में होना ज़रूरी है)
+    # 🚫 ग्रुप कमांड पर फ़ोर्स ग्रुप ज्वाइन चेक (अब सिर्फ यहाँ फ़ोर्स करेगा)
     if not is_user_subscribed(user_id):
         join_msg = (
-            f"❌ **एक्सेस डिनाइड (Access Denied)!**\n\n"
-            f"लाइक्स पाने के लिए आपको हमारे **चैनल** और इस **ग्रुप** दोनों का मेंबर होना अनिवार्य है।\n\n"
-            f"📢 **चैनल ज्वाइन करें:** {CHANNEL_USERNAME}\n"
-            f"👥 **ग्रुप ज्वाइन करें:** [क्लिक करें]({GROUP_INVITE_LINK})\n\n"
-            f"दोनों ज्वाइन करने के बाद दोबारा यहाँ `/like <UID>` टाइप करें।"
+            f"❌ **एक्सेस डिनाइड (Access Denied), {message.from_user.first_name}!**\n\n"
+            f"इस ग्रुप में लाइक कमांड चलाने के लिए आपको हमारे **सपोर्ट ग्रुप** को ज्वाइन करना अनिवार्य है।\n\n"
+            f"👥 **ज्वाइन करने के लिए यहाँ क्लिक करें:** [Force Group ज्वाइन करें]({FORCE_GROUP_INVITE_LINK})\n\n"
+            f"ज्वाइन करने के बाद दोबारा यहाँ `/like <UID>` टाइप करें।"
         )
         bot.reply_to(message, join_msg, disable_web_page_preview=True)
         return
@@ -109,12 +96,12 @@ def like_cmd(message):
         bot.reply_to(message, "❌ **त्रुटि:** कृपया एक वैध अंकों वाली Free Fire UID दर्ज करें।")
         return
 
-    # 2. डेली लिमिट चेक
+    # डेली लिमिट चेक
     if not check_daily_limit(str(user_id)):
         bot.reply_to(message, "❌ **लिमिट समाप्त!** आप आज के अपने 20 लाइक्स ले चुके हैं। कल दोबारा प्रयास करें।")
         return
 
-    bot.reply_to(message, f"⏳ **UID:** `{target_uid}` पर **+20 लाइक्स** प्रोसेस हो रहे हैं...")
+    bot.reply_to(message, f"⏳ **UID:** `{target_uid}` पर **+20 लाइक्स** भेजे जा रहे हैं... कृपया प्रतीक्षा करें।")
     
     try:
         process = subprocess.Popen(
@@ -160,5 +147,5 @@ def like_cmd(message):
         bot.reply_to(message, f"❌ **त्रुटि हुई:** {str(e)}")
 
 def start_bot_polling():
-    print("🤖 फ़ोर्स ज्वाइन और ग्रुप-ओनली बॉट पोलिंग चालू है...")
+    print("🤖 ग्रुप-ओनली फ़ोर्स ज्वाइन बॉट पोलिंग चालू है...")
     bot.infinity_polling()
